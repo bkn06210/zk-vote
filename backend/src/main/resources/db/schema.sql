@@ -12,22 +12,24 @@ CREATE TABLE admin_invitations (
     created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- id는 UUID를 애플리케이션(JPA)에서 생성하여 삽입
 CREATE TABLE elections (
-    id                      CHAR(36)     NOT NULL PRIMARY KEY,
-    name                    VARCHAR(255) NOT NULL,
-    merkle_tree_depth       INT          NOT NULL,
-    candidates              JSON         NOT NULL,
-    num_candidates          INT          NOT NULL,
-    registration_start_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    registration_end_time   DATETIME     NOT NULL,
-    voting_start_time       DATETIME              DEFAULT NULL,
-    voting_end_time         DATETIME              DEFAULT NULL,
-    contract_address        VARCHAR(42)           DEFAULT NULL,
-    merkle_root             VARCHAR(255)          DEFAULT NULL,
-    completed               TINYINT(1)   NOT NULL DEFAULT 0,
-    created_at              DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id                      CHAR(36)                                              NOT NULL PRIMARY KEY,
+    name                    VARCHAR(255)                                          NOT NULL,
+    merkle_tree_depth       INT                                                   NOT NULL,
+    candidates              JSON                                                  NOT NULL,
+    num_candidates          INT                                                   NOT NULL,
+    status                  ENUM('REGISTRATION', 'VOTING', 'COMPLETED') NOT NULL DEFAULT 'REGISTRATION',
+    registration_start_time DATETIME                                     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    registration_end_time   DATETIME                                              DEFAULT NULL,
+    voting_start_time       DATETIME                                              DEFAULT NULL,
+    voting_end_time         DATETIME                                              DEFAULT NULL,
+    contract_address        VARCHAR(42)                                           DEFAULT NULL,
+    merkle_root             VARCHAR(255)                                          DEFAULT NULL,
+    created_at              DATETIME                                     NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- id는 UUID를 애플리케이션(JPA)에서 생성하여 삽입
 CREATE TABLE voters (
     id          CHAR(36)     NOT NULL PRIMARY KEY,
     election_id CHAR(36)     NOT NULL,
