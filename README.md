@@ -1,13 +1,7 @@
-# Sample Hardhat Project
+# zk-vote
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a Hardhat Ignition module that deploys that contract.
+A zero-knowledge proof based voting system.
 
-Try running some of the following tasks:
+## Credits
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat ignition deploy ./ignition/modules/Lock.js
-```
+Based on [HoYongJin/zk-vote](https://github.com/HoYongJin/zk-vote)
