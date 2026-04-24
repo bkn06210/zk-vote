@@ -2,6 +2,7 @@ package com.zkvote.domain.election;
 
 import com.zkvote.domain.election.dto.CreateElectionRequest;
 import com.zkvote.domain.election.dto.ElectionResponse;
+import com.zkvote.domain.election.dto.StartVotingRequest;
 import com.zkvote.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -48,5 +49,19 @@ public class ElectionController {
     public ResponseEntity<List<ElectionResponse>> getCompleted(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(electionService.getCompleted(userDetails.getId()));
+    }
+
+    @PostMapping("/{electionId}/start-voting")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ElectionResponse> startVoting(
+            @PathVariable String electionId,
+            @Valid @RequestBody StartVotingRequest request) {
+        return ResponseEntity.ok(electionService.startVoting(electionId, request));
+    }
+
+    @PostMapping("/{electionId}/complete")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ElectionResponse> complete(@PathVariable String electionId) {
+        return ResponseEntity.ok(electionService.complete(electionId));
     }
 }
