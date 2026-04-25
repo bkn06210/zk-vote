@@ -204,7 +204,7 @@ function VotePage() {
         <div style={pageStyle}>
             <header style={headerStyle}>
                 <h1>{election.name}</h1>
-                <p>투표 마감일: {new Date(election.voting_end_time).toLocaleString()}</p>
+                <p>투표 마감일: {new Date(election.votingEndTime).toLocaleString()}</p>
             </header>
 
             <p>투표할 후보를 선택해주세요.</p>
