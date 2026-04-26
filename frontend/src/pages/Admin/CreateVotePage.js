@@ -1,231 +1,123 @@
-/**
- * @file frontend/src/pages/Admin/CreateVotePage.js
- * @desc A form page for administrators to create a new election.
- * It collects election details (name, times, depth, candidates) and
- * submits them to the /api/elections/set endpoint.
- */
-
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from '../../api/axios';
 
-// --- [PERFORMANCE] Style Definitions ---
-// Moved outside the component function to prevent re-creation on every render.
-const pageStyle = { fontFamily: 'sans-serif', padding: '20px', maxWidth: '600px', margin: 'auto' };
-const formStyle = { display: 'flex', flexDirection: 'column', gap: '20px' }; // Increased gap
-const inputGroupStyle = { display: 'flex', flexDirection: 'column' };
-const labelStyle = { marginBottom: '5px', fontWeight: 'bold', color: '#333' };
-const inputStyle = { padding: '10px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '1em' };
-const buttonStyle = { padding: '12px', border: 'none', borderRadius: '4px', backgroundColor: '#007bff', color: 'white', cursor: 'pointer', fontSize: '16px', transition: 'background-color 0.2s ease' };
-const disabledButtonStyle = { ...buttonStyle, backgroundColor: '#aaa', cursor: 'not-allowed' };
-const candidateInputGroupStyle = { display: 'flex', gap: '10px', marginBottom: '5px' };
-const candidateInputStyle = { ...inputStyle, flex: 1 };
-// [UX] Styled buttons for add/remove
-const secondaryButtonStyle = { padding: '8px 12px', border: '1px solid #007bff', borderRadius: '4px', backgroundColor: '#fff', color: '#007bff', cursor: 'pointer' };
-const removeButtonStyle = { ...secondaryButtonStyle, borderColor: '#dc3545', color: '#dc3545' };
-
-
-/**
- * Renders the "Create New Vote" form page for admins.
- * Allows setting up the basic parameters of a new election.
- *
- * @returns {React.ReactElement} The rendered CreateVotePage component.
- */
 function CreateVotePage() {
-    // --- State Definitions ---
     const [name, setName] = useState('');
     const [merkleTreeDepth, setMerkleTreeDepth] = useState('');
-    const [candidates, setCandidates] = useState(['']); // Start with one candidate field
+    const [candidates, setCandidates] = useState(['', '']);
     const [regEndTime, setRegEndTime] = useState('');
-  
-    // [UX] Loading state to prevent duplicate submissions
-    const [isLoading, setIsLoading] = useState(false); 
-    
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
-    // --- Candidate List Handlers ---
-
-    /**
-     * Updates the candidate name at a specific index in the state array.
-     * @param {number} index - The index of the candidate to update.
-     * @param {React.ChangeEvent<HTMLInputElement>} event - The input change event.
-     */
-    const handleCandidateChange = (index, event) => {
-        const newCandidates = [...candidates];
-        newCandidates[index] = event.target.value;
-        setCandidates(newCandidates);
+    const handleCandidateChange = (index, value) => {
+        const next = [...candidates];
+        next[index] = value;
+        setCandidates(next);
     };
 
-    /**
-     * Adds a new, empty string to the candidates array, triggering a re-render
-     * with a new input field.
-     */
     const addCandidate = () => setCandidates([...candidates, '']);
-
-    /**
-     * Removes a candidate from the array at a specific index.
-     * @param {number} index - The index of the candidate to remove.
-     */
     const removeCandidate = (index) => {
-        // [UX] Only allow removal if there is more than one candidate
-        if (candidates.length > 1) {
-            setCandidates(candidates.filter((_, i) => i !== index));
-        }
+        if (candidates.length > 2) setCandidates(candidates.filter((_, i) => i !== index));
     };
 
-    // --- Form Submission Handler ---
-
-    /**
-     * Handles the form submission.
-     * Validates input, sends data to the /api/elections/set endpoint,
-     * handles success (alert, navigate) and error (alert) states.
-     * @param {React.FormEvent<HTMLFormElement>} event - The form submit event.
-     */
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-    
-        // Filter out empty strings (e.g., if user added a field but left it blank)
-        const finalCandidates = candidates.filter(c => c.trim() !== '');
-
-        // --- Validation ---
-        if (finalCandidates.length < 1) {
-            alert('후보자를 최소 1명 이상 입력해야 합니다.');
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const finalCandidates = candidates.map(c => c.trim()).filter(Boolean);
+        if (finalCandidates.length < 2) {
+            alert('후보자를 최소 2명 입력해주세요.');
             return;
         }
-        // Check for other fields (already covered by 'required' attribute, but good for safety)
-        if (!name || !merkleTreeDepth || !regEndTime) {
-            alert('모든 필수 항목을 입력해주세요.');
-            return;
-        }
-        if (new Date(regEndTime) <= new Date()) {
-            alert('등록 마감 시간은 현재 시간보다 미래로 설정해야 합니다.');
-            return;
-        }
-
-        // [UX] Set loading state to prevent double-click
         setIsLoading(true);
-
         try {
-            // 1. Send the API request with the correct data structure
-            await axios.post('/elections/set', {
+            await axios.post('/api/elections', {
                 name: name.trim(),
-                merkleTreeDepth: parseInt(merkleTreeDepth, 10), // Ensure it's a number
+                merkleTreeDepth: parseInt(merkleTreeDepth, 10),
                 candidates: finalCandidates,
-                regEndTime: regEndTime, // Already in ISO format from datetime-local input
+                registrationEndTime: regEndTime,
             });
-        
-            // [UX] Simplified success message
-            alert(`투표가 성공적으로 생성되었습니다.\n관리 대시보드로 이동하여 "ZK 설정 & 배포"를 진행하세요.`);
-            
-            navigate('/admin'); // Navigate to the manage page (where the new vote will be)
-
-        } catch (error) {
-            console.error('투표 생성 실패:', error.response?.data);
-            // [UX] Show the more specific 'details' field from our server's error response
-            alert(`투표 생성 실패: ${error.response?.data?.details || error.message}`);
+            alert('투표가 생성되었습니다.');
+            navigate('/admin');
+        } catch (err) {
+            alert(`생성 실패: ${err.response?.data?.message || err.message}`);
         } finally {
-            // [UX] Always turn off loading state
             setIsLoading(false);
         }
     };
 
     return (
-        <main style={pageStyle}>
-        <Link to="/admin" style={{ textDecoration: 'none', color: '#007bff' }}>
-            &larr; 관리 대시보드로 돌아가기
-        </Link>
-        <h2 style={{ marginTop: '20px' }}>새로운 투표 생성</h2>
-        
-        <form onSubmit={handleSubmit} style={formStyle}>
-            
-            {/* Vote Name */}
-            <div style={inputGroupStyle}>
-            <label style={labelStyle} htmlFor="voteName">투표 이름</label>
-            <input 
-                id="voteName"
-                style={inputStyle} 
-                type="text" 
-                value={name} 
-                onChange={(e) => setName(e.target.value)} 
-                required 
-            />
-            </div>
+        <div style={styles.page}>
+            <button style={styles.back} onClick={() => navigate('/admin')}>← 돌아가기</button>
+            <h2 style={styles.title}>새 투표 생성</h2>
 
-            {/* Registration End Time */}
-            <div style={inputGroupStyle}>
-            <label style={labelStyle} htmlFor="regEndTime">유권자 등록 마감 시간</label>
-            <input 
-                id="regEndTime"
-                style={inputStyle} 
-                type="datetime-local" 
-                value={regEndTime} 
-                onChange={(e) => setRegEndTime(e.target.value)} 
-                required 
-            />
-            </div>
+            <form onSubmit={handleSubmit} style={styles.form}>
+                <Field label="투표 이름">
+                    <input style={styles.input} type="text" value={name}
+                        onChange={(e) => setName(e.target.value)} required />
+                </Field>
 
-            {/* Merkle Tree Depth */}
-            <div style={inputGroupStyle}>
-            <label style={labelStyle} htmlFor="merkleDepth">머클 트리 깊이</label>
-            <input 
-                id="merkleDepth"
-                style={inputStyle} 
-                type="number" 
-                min="2" // A depth of 1 is not very useful
-                max="32" // Max depth for practical purposes
-                value={merkleTreeDepth} 
-                onChange={(e) => setMerkleTreeDepth(e.target.value)} 
-                placeholder="예: 10 (2^10 = 1024명 지원)" 
-                required 
-            />
-            </div>
-            
-            {/* Dynamic Candidate List */}
-            <div style={inputGroupStyle}>
-            <label style={labelStyle}>후보자 목록</label>
-            {candidates.map((candidate, index) => (
-                <div key={index} style={candidateInputGroupStyle}>
-                <input 
-                    style={candidateInputStyle} 
-                    type="text" 
-                    value={candidate} 
-                    onChange={(e) => handleCandidateChange(index, e)} 
-                    placeholder={`후보 ${index + 1}`} 
-                    required
-                />
-                {/* [UX] Only show Remove button if there is more than 1 candidate */}
-                {candidates.length > 1 && (
-                    <button 
-                    type="button" 
-                    style={removeButtonStyle}
-                    onClick={() => removeCandidate(index)}
-                    aria-label={`Remove candidate ${index + 1}`}
-                    >
-                    제거
+                <Field label="유권자 등록 마감 시간">
+                    <input style={styles.input} type="datetime-local" value={regEndTime}
+                        onChange={(e) => setRegEndTime(e.target.value)} required />
+                </Field>
+
+                <Field label="Merkle tree 깊이" hint="2^깊이 = 최대 유권자 수 (예: 10 → 1024명)">
+                    <input style={styles.input} type="number" min="2" max="32"
+                        value={merkleTreeDepth} onChange={(e) => setMerkleTreeDepth(e.target.value)}
+                        placeholder="예: 10" required />
+                </Field>
+
+                <div>
+                    <label style={styles.label}>후보자 목록</label>
+                    {candidates.map((c, i) => (
+                        <div key={i} style={styles.candidateRow}>
+                            <input style={{ ...styles.input, flex: 1, margin: 0 }} type="text"
+                                value={c} onChange={(e) => handleCandidateChange(i, e.target.value)}
+                                placeholder={`후보 ${i + 1}`} required />
+                            {candidates.length > 2 && (
+                                <button type="button" style={styles.btnRemove}
+                                    onClick={() => removeCandidate(i)}>제거</button>
+                            )}
+                        </div>
+                    ))}
+                    <button type="button" style={styles.btnAdd} onClick={addCandidate}>
+                        + 후보자 추가
                     </button>
-                )}
                 </div>
-            ))}
-            <button 
-                type="button" 
-                style={{...secondaryButtonStyle, marginTop: '10px'}}
-                onClick={addCandidate}
-            >
-                후보자 추가
-            </button>
-            </div>
-            
-            {/* Submit Button */}
-            <button 
-            type="submit" 
-            style={isLoading ? disabledButtonStyle : buttonStyle} 
-            disabled={isLoading}
-            >
-            {isLoading ? '생성 중...' : '투표 생성하기'}
-            </button>
-        </form>
-        </main>
+
+                <button type="submit" style={isLoading ? styles.btnDisabled : styles.btnSubmit}
+                    disabled={isLoading}>
+                    {isLoading ? '생성 중...' : '투표 생성'}
+                </button>
+            </form>
+        </div>
     );
 }
+
+function Field({ label, hint, children }) {
+    return (
+        <div style={styles.field}>
+            <label style={styles.label}>{label}</label>
+            {hint && <p style={styles.hint}>{hint}</p>}
+            {children}
+        </div>
+    );
+}
+
+const styles = {
+    page: { fontFamily: "'Segoe UI', sans-serif", padding: '32px 24px', maxWidth: '560px', margin: 'auto', color: '#1a1a2e' },
+    back: { background: 'none', border: 'none', color: '#764ba2', cursor: 'pointer', fontSize: '0.95rem', padding: 0, marginBottom: '20px' },
+    title: { fontSize: '1.5rem', fontWeight: '700', margin: '0 0 28px', color: '#0f3460' },
+    form: { display: 'flex', flexDirection: 'column', gap: '20px' },
+    field: { display: 'flex', flexDirection: 'column', gap: '6px' },
+    label: { fontSize: '0.85rem', fontWeight: '600', color: '#444' },
+    hint: { margin: '0 0 4px', fontSize: '0.8rem', color: '#888' },
+    input: { padding: '10px 12px', border: '1.5px solid #e0e0e0', borderRadius: '8px', fontSize: '0.95rem', outline: 'none' },
+    candidateRow: { display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' },
+    btnAdd: { background: 'none', border: '1.5px dashed #764ba2', color: '#764ba2', borderRadius: '8px', padding: '8px 14px', cursor: 'pointer', fontSize: '0.85rem', width: '100%' },
+    btnRemove: { padding: '10px 12px', background: 'none', border: '1.5px solid #f44336', color: '#f44336', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', whiteSpace: 'nowrap' },
+    btnSubmit: { padding: '13px', background: '#764ba2', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: '600', cursor: 'pointer' },
+    btnDisabled: { padding: '13px', background: '#ccc', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1rem', cursor: 'not-allowed' },
+};
 
 export default CreateVotePage;

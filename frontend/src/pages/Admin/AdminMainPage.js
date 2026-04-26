@@ -24,7 +24,6 @@ function AdminMainPage() {
     const [isStartVotingModalOpen, setIsStartVotingModalOpen] = useState(false);
     const [selectedVote, setSelectedVote] = useState(null);
     const [voters, setVoters] = useState('');
-    const [merkleRoot, setMerkleRoot] = useState('');
     const [contractAddress, setContractAddress] = useState('');
     const [votingEndTime, setVotingEndTime] = useState('');
 
@@ -76,20 +75,18 @@ function AdminMainPage() {
 
     const handleStartVoting = async () => {
         if (!selectedVote) return;
-        if (!merkleRoot || !contractAddress || !votingEndTime) {
+        if (!contractAddress || !votingEndTime) {
             alert('모든 항목을 입력해주세요.');
             return;
         }
         setActionLoading(prev => ({ ...prev, isStartingVoting: selectedVote.id }));
         try {
             await axios.post(`/api/elections/${selectedVote.id}/start-voting`, {
-                merkleRoot,
                 contractAddress,
                 votingEndTime,
             });
             alert('투표가 시작되었습니다.');
             setIsStartVotingModalOpen(false);
-            setMerkleRoot('');
             setContractAddress('');
             setVotingEndTime('');
             fetchAllVotes();
@@ -136,7 +133,7 @@ function AdminMainPage() {
                         <button style={styles.btnInfo} onClick={() => { setSelectedVote(vote); setVoters(''); setIsVoterModalOpen(true); }}>
                             유권자 등록
                         </button>
-                        <button style={styles.btnSuccess} onClick={() => { setSelectedVote(vote); setMerkleRoot(''); setContractAddress(''); setVotingEndTime(''); setIsStartVotingModalOpen(true); }}>
+                        <button style={styles.btnSuccess} onClick={() => { setSelectedVote(vote); setContractAddress(''); setVotingEndTime(''); setIsStartVotingModalOpen(true); }}>
                             투표 시작
                         </button>
                     </>
@@ -203,11 +200,7 @@ function AdminMainPage() {
                 {selectedVote && (
                     <div>
                         <h3 style={styles.modalTitle}>'{selectedVote.name}' 투표 시작</h3>
-                        <p style={styles.modalDesc}>Node.js 서버에서 Merkle root와 컨트랙트 주소를 먼저 생성해주세요.</p>
-                        <div style={styles.inputGroup}>
-                            <label style={styles.label}>Merkle Root</label>
-                            <input style={styles.input} value={merkleRoot} onChange={(e) => setMerkleRoot(e.target.value)} placeholder="0x..." />
-                        </div>
+                        <p style={styles.modalDesc}>Merkle root는 서버가 자동으로 계산합니다. 컨트랙트 주소와 종료 시간만 입력하세요.</p>
                         <div style={styles.inputGroup}>
                             <label style={styles.label}>컨트랙트 주소</label>
                             <input style={styles.input} value={contractAddress} onChange={(e) => setContractAddress(e.target.value)} placeholder="0x..." />
