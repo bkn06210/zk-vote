@@ -38,7 +38,10 @@ VOTING 전환 시에는 단순 시간 경과가 아닌 사전 작업이 필요�
 ## 컨트랙트 배포 역할 분리
 Spring Boot는 비즈니스 로직과 ZK proof 검증에 집중하고,
 컨트랙트 배포는 기존 Node.js + Hardhat 스크립트가 담당한다.
-Spring Boot는 배포 결과인 `contractAddress`와 `merkleRoot`만 받아서 저장한다.
+Spring Boot는 배포 결과인 `contractAddress`만 받아서 저장한다.
 
 이렇게 역할을 분리한 이유는 Java에서 Hardhat을 직접 실행하는 것이
 환경 의존성이 높고 구조적으로 부적절하기 때문이다.
+
+> **변경**: `merkleRoot`는 Admin이 전달하지 않는다.
+> VOTING 전환 시 서버가 DB의 유권자 목록을 기반으로 직접 계산한다. → ADR-007 참고
