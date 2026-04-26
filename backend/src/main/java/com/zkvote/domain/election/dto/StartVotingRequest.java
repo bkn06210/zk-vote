@@ -10,9 +10,6 @@ import java.time.LocalDateTime;
 public class StartVotingRequest {
 
     @NotBlank
-    private String merkleRoot;
-
-    @NotBlank
     private String contractAddress;
 
     @Future

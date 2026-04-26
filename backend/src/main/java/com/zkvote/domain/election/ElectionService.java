@@ -3,6 +3,9 @@ package com.zkvote.domain.election;
 import com.zkvote.domain.election.dto.CreateElectionRequest;
 import com.zkvote.domain.election.dto.ElectionResponse;
 import com.zkvote.domain.election.dto.StartVotingRequest;
+import com.zkvote.domain.voter.Voter;
+import com.zkvote.domain.voter.VoterRepository;
+import com.zkvote.global.zkp.MerkleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +17,8 @@ import java.util.List;
 public class ElectionService {
 
     private final ElectionRepository electionRepository;
+    private final VoterRepository voterRepository;
+    private final MerkleService merkleService;
 
     @Transactional
     public ElectionResponse create(CreateElectionRequest request) {
@@ -64,7 +69,19 @@ public class ElectionService {
             throw new IllegalStateException("등록 기간인 선거만 투표를 시작할 수 있습니다.");
         }
 
-        election.startVoting(request.getVotingEndTime(), request.getMerkleRoot(), request.getContractAddress());
+        List<String> secrets = voterRepository
+                .findByElectionIdAndUserSecretIsNotNullOrderByIdAsc(electionId)
+                .stream()
+                .map(Voter::getUserSecret)
+                .toList();
+
+        if (secrets.isEmpty()) {
+            throw new IllegalStateException("등록된 유권자가 없어 투표를 시작할 수 없습니다.");
+        }
+
+        String merkleRoot = merkleService.computeRoot(secrets, election.getMerkleTreeDepth());
+
+        election.startVoting(request.getVotingEndTime(), request.getContractAddress(), merkleRoot);
         return ElectionResponse.from(election);
     }
 

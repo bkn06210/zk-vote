@@ -57,13 +57,13 @@ public class Election {
         }
     }
 
-    public void startVoting(LocalDateTime votingEndTime, String merkleRoot, String contractAddress) {
+    public void startVoting(LocalDateTime votingEndTime, String contractAddress, String merkleRoot) {
         this.status = ElectionStatus.VOTING;
         this.registrationEndTime = LocalDateTime.now();
         this.votingStartTime = LocalDateTime.now();
         this.votingEndTime = votingEndTime;
-        this.merkleRoot = merkleRoot;
         this.contractAddress = contractAddress;
+        this.merkleRoot = merkleRoot;
     }
 
     public void complete() {

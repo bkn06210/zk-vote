@@ -22,3 +22,7 @@ server:
 
 app:
   secret-salt: ${SECRET_SALT:devsalt1234}
+
+merkle:
+  script:
+    path: ${MERKLE_SCRIPT_PATH:scripts/compute_merkle_root.js}

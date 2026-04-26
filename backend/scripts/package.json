@@ -1,0 +1,10 @@
+{
+  "name": "merkle-scripts",
+  "version": "1.0.0",
+  "description": "Poseidon Merkle tree computation for Spring Boot backend",
+  "main": "compute_merkle_root.js",
+  "dependencies": {
+    "circomlibjs": "^0.1.7",
+    "fixed-merkle-tree": "^0.7.3"
+  }
+}
