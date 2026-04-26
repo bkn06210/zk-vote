@@ -26,3 +26,11 @@ app:
 merkle:
   script:
     path: ${MERKLE_SCRIPT_PATH:scripts/compute_merkle_root.js}
+  proof-script:
+    path: ${MERKLE_PROOF_SCRIPT_PATH:scripts/compute_merkle_proof.js}
+
+zkp:
+  files:
+    path: ${ZKP_FILES_PATH:../server/zkp}
+  verify-script:
+    path: ${ZKP_VERIFY_SCRIPT_PATH:scripts/verify_proof.js}

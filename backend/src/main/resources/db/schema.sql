@@ -29,6 +29,26 @@ CREATE TABLE elections (
     created_at              DATETIME                                     NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE submission_tickets (
+    token       CHAR(36)     NOT NULL PRIMARY KEY,
+    election_id CHAR(36)     NOT NULL,
+    user_id     BIGINT       NOT NULL,
+    created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_ticket_election_user (election_id, user_id),
+    CONSTRAINT fk_ticket_election FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
+    CONSTRAINT fk_ticket_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE vote_records (
+    id             BIGINT AUTO_INCREMENT PRIMARY KEY,
+    election_id    CHAR(36)     NOT NULL,
+    vote_index     INT          NOT NULL,
+    nullifier_hash VARCHAR(255) NOT NULL,
+    submitted_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_nullifier (nullifier_hash),
+    CONSTRAINT fk_vote_record_election FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE
+);
+
 -- id는 UUID를 애플리케이션(JPA)에서 생성하여 삽입
 CREATE TABLE voters (
     id          CHAR(36)     NOT NULL PRIMARY KEY,
