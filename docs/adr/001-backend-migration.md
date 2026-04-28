@@ -16,7 +16,7 @@ Supabase가 인증(Auth), DB, 캐시를 모두 관리하는 구조였기 때문�
 | 런타임 | Node.js/Express | Spring Boot 4.0 (Java 21) |
 | 데이터베이스 | Supabase (PostgreSQL) | MySQL 8.0 |
 | 인증 | Supabase Auth | Spring Security + JWT 직접 구현 |
-| 캐시 | AWS ElastiCache (Redis) | 유지 |
+| 캐시 | AWS ElastiCache (Redis) | 미사용 (DB로 대체) |
 | 빌드 도구 | npm | Gradle |
 
 ## 이유
@@ -27,4 +27,4 @@ Supabase가 인증(Auth), DB, 캐시를 모두 관리하는 구조였기 때문�
 ## 트레이드오프
 - Supabase가 제공하던 Row Level Security(RLS)가 사라지므로 권한 제어를 서비스 레이어에서 직접 처리해야 한다.
 - Node.js 대비 초기 설정 코드량이 많다.
-- Redis 캐시(Merkle tree, 제출 티켓)는 기존 로직을 그대로 유지할 수 없어 Spring 방식으로 재구현이 필요하다.
+- 기존에 Redis로 처리하던 제출 티켓 저장과 동시성 제어는 MySQL UNIQUE KEY 제약으로 대체했다. 동일한 원자성이 보장되며, 이 규모에서는 성능 차이가 없어 시스템 복잡도를 줄이기 위해 DB로 통일했다.
