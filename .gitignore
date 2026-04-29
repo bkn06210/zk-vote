@@ -1,5 +1,7 @@
 CLAUDE.md
+.claude/
 node_modules
+frontend/dist/
 .env
 server/zkp/tmp/
 server/zkp/input/
