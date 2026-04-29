@@ -26,6 +26,12 @@ public class VoteRecord {
     @Column(nullable = false)
     private String nullifierHash;
 
+    @Column
+    private String voteReceipt;
+
+    @Column
+    private String txHash;
+
     @Column(nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime submittedAt = LocalDateTime.now();

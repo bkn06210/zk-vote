@@ -34,6 +34,10 @@ public class User {
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
     public void promoteToAdmin() {
         this.role = UserRole.ADMIN;
     }

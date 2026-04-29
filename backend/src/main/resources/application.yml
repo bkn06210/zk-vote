@@ -20,6 +20,7 @@ jwt:
 server:
   port: 8080
 
+
 app:
   secret-salt: ${SECRET_SALT:devsalt1234}
 
@@ -34,3 +35,10 @@ zkp:
     path: ${ZKP_FILES_PATH:../server/zkp}
   verify-script:
     path: ${ZKP_VERIFY_SCRIPT_PATH:scripts/verify_proof.js}
+
+blockchain:
+  enabled: ${BLOCKCHAIN_ENABLED:false}
+  rpc-url: ${BLOCKCHAIN_RPC_URL:}
+  private-key: ${BLOCKCHAIN_PRIVATE_KEY:}
+  record-script:
+    path: ${BLOCKCHAIN_SCRIPT_PATH:scripts/record_vote.js}

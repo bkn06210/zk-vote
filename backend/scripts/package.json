@@ -5,6 +5,7 @@
   "main": "compute_merkle_root.js",
   "dependencies": {
     "circomlibjs": "^0.1.7",
+    "ethers": "^5.7.2",
     "fixed-merkle-tree": "^0.7.3",
     "snarkjs": "^0.6.11"
   }
