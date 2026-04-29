@@ -5,7 +5,7 @@ import { setUser, setAdmin } from '../store/authSlice';
 import apiClient from '../api/axios';
 
 function LoginPage() {
-    const [mode, setMode] = useState('login'); // 'login' | 'signup'
+    const [mode, setMode] = useState('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -24,8 +24,8 @@ function LoginPage() {
             localStorage.setItem('email', userEmail);
             localStorage.setItem('role', role);
             dispatch(setUser({ email: userEmail, role }));
-            dispatch(setAdmin(role === 'ROLE_ADMIN'));
-            navigate(role === 'ROLE_ADMIN' ? '/admin' : '/');
+            dispatch(setAdmin(role === 'ADMIN'));
+            navigate(role === 'ADMIN' ? '/admin' : '/');
         } catch (err) {
             setError(err.response?.data?.message || '이메일 또는 비밀번호가 올바르지 않습니다.');
         } finally {
@@ -50,185 +50,75 @@ function LoginPage() {
     };
 
     return (
-        <div style={styles.bg}>
-            <div style={styles.card}>
-                <div style={styles.logo}>
-                    <span style={styles.logoIcon}>🗳️</span>
-                    <h1 style={styles.logoText}>ZK-VOTE</h1>
-                    <p style={styles.logoSub}>영지식 증명 기반 전자투표</p>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-600 to-purple-800 px-4">
+            <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden">
+                {/* Header */}
+                <div className="bg-gradient-to-br from-violet-600 to-purple-800 px-8 py-10 text-center">
+                    <div className="text-5xl mb-3">🗳️</div>
+                    <h1 className="text-3xl font-bold text-white tracking-widest">ZK-VOTE</h1>
+                    <p className="text-violet-200 text-sm mt-1">영지식 증명 기반 전자투표</p>
                 </div>
 
-                <div style={styles.tabs}>
-                    <button
-                        style={mode === 'login' ? styles.tabActive : styles.tab}
-                        onClick={() => { setMode('login'); setError(''); }}
-                    >
-                        로그인
-                    </button>
-                    <button
-                        style={mode === 'signup' ? styles.tabActive : styles.tab}
-                        onClick={() => { setMode('signup'); setError(''); }}
-                    >
-                        회원가입
-                    </button>
+                <div className="px-8 py-8">
+                    {/* Tabs */}
+                    <div className="flex rounded-lg border border-gray-200 overflow-hidden mb-6">
+                        <button
+                            className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${mode === 'login' ? 'bg-purple-700 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                            onClick={() => { setMode('login'); setError(''); }}
+                        >
+                            로그인
+                        </button>
+                        <button
+                            className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${mode === 'signup' ? 'bg-purple-700 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                            onClick={() => { setMode('signup'); setError(''); }}
+                        >
+                            회원가입
+                        </button>
+                    </div>
+
+                    <form onSubmit={mode === 'login' ? handleLogin : handleSignup} className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">이메일</label>
+                            <input
+                                className="px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition"
+                                type="email"
+                                placeholder="email@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">비밀번호</label>
+                            <input
+                                className="px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition"
+                                type="password"
+                                placeholder="비밀번호 입력"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        {error && (
+                            <div className="flex items-center gap-2 px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg">
+                                <span className="text-red-500 text-base">⚠</span>
+                                <p className="text-red-600 text-sm">{error}</p>
+                            </div>
+                        )}
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="mt-1 py-3 rounded-lg text-sm font-semibold text-white bg-purple-700 hover:bg-purple-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                        >
+                            {loading ? '처리 중...' : mode === 'login' ? '로그인' : '회원가입'}
+                        </button>
+                    </form>
                 </div>
-
-                <form onSubmit={mode === 'login' ? handleLogin : handleSignup} style={styles.form}>
-                    <div style={styles.inputGroup}>
-                        <label style={styles.label}>이메일</label>
-                        <input
-                            style={styles.input}
-                            type="email"
-                            placeholder="email@example.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div style={styles.inputGroup}>
-                        <label style={styles.label}>비밀번호</label>
-                        <input
-                            style={styles.input}
-                            type="password"
-                            placeholder="비밀번호 입력"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    {error && <p style={styles.error}>{error}</p>}
-
-                    <button
-                        type="submit"
-                        style={loading ? styles.btnDisabled : styles.btn}
-                        disabled={loading}
-                    >
-                        {loading ? '처리 중...' : mode === 'login' ? '로그인' : '회원가입'}
-                    </button>
-                </form>
             </div>
         </div>
     );
 }
-
-const styles = {
-    bg: {
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: "'Segoe UI', sans-serif",
-    },
-    card: {
-        background: 'white',
-        borderRadius: '16px',
-        padding: '40px',
-        width: '380px',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-    },
-    logo: {
-        textAlign: 'center',
-        marginBottom: '28px',
-    },
-    logoIcon: {
-        fontSize: '2.5rem',
-    },
-    logoText: {
-        margin: '8px 0 4px',
-        fontSize: '1.8rem',
-        fontWeight: '700',
-        color: '#1a1a2e',
-        letterSpacing: '2px',
-    },
-    logoSub: {
-        margin: 0,
-        color: '#888',
-        fontSize: '0.85rem',
-    },
-    tabs: {
-        display: 'flex',
-        borderRadius: '8px',
-        overflow: 'hidden',
-        border: '1px solid #e0e0e0',
-        marginBottom: '24px',
-    },
-    tab: {
-        flex: 1,
-        padding: '10px',
-        border: 'none',
-        background: 'white',
-        color: '#888',
-        cursor: 'pointer',
-        fontSize: '0.95rem',
-        transition: 'all 0.2s',
-    },
-    tabActive: {
-        flex: 1,
-        padding: '10px',
-        border: 'none',
-        background: '#764ba2',
-        color: 'white',
-        cursor: 'pointer',
-        fontSize: '0.95rem',
-        fontWeight: '600',
-    },
-    form: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '16px',
-    },
-    inputGroup: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '6px',
-    },
-    label: {
-        fontSize: '0.85rem',
-        fontWeight: '600',
-        color: '#444',
-    },
-    input: {
-        padding: '12px 14px',
-        border: '1.5px solid #e0e0e0',
-        borderRadius: '8px',
-        fontSize: '0.95rem',
-        outline: 'none',
-        transition: 'border-color 0.2s',
-    },
-    btn: {
-        marginTop: '8px',
-        padding: '13px',
-        background: '#764ba2',
-        color: 'white',
-        border: 'none',
-        borderRadius: '8px',
-        fontSize: '1rem',
-        fontWeight: '600',
-        cursor: 'pointer',
-        transition: 'background 0.2s',
-    },
-    btnDisabled: {
-        marginTop: '8px',
-        padding: '13px',
-        background: '#aaa',
-        color: 'white',
-        border: 'none',
-        borderRadius: '8px',
-        fontSize: '1rem',
-        fontWeight: '600',
-        cursor: 'not-allowed',
-    },
-    error: {
-        color: '#e53e3e',
-        fontSize: '0.85rem',
-        margin: 0,
-        padding: '10px 12px',
-        background: '#fff5f5',
-        borderRadius: '6px',
-        border: '1px solid #fed7d7',
-    },
-};
 
 export default LoginPage;

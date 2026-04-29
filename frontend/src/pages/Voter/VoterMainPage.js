@@ -59,140 +59,142 @@ function VoterMainPage() {
     };
 
     return (
-        <div style={styles.page}>
-            <header style={styles.header}>
-                <h1 style={styles.title}>ZK-VOTE</h1>
-                {auth.isLoggedIn && (
-                    <div style={styles.headerRight}>
-                        <span style={styles.email}>{auth.user?.email}</span>
-                        {auth.isAdmin && (
-                            <Link to="/admin">
-                                <button style={styles.btnSecondary}>관리자 페이지</button>
-                            </Link>
-                        )}
-                        <button onClick={handleLogout} style={styles.btnOutline}>로그아웃</button>
+        <div className="min-h-screen bg-gray-50">
+            {/* Header */}
+            <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+                <div className="max-w-3xl mx-auto px-6 py-4 flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xl">🗳️</span>
+                        <h1 className="text-xl font-bold text-gray-900 tracking-widest">ZK-VOTE</h1>
                     </div>
-                )}
+                    {auth.isLoggedIn && (
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-400 mr-1">{auth.user?.email}</span>
+                            {auth.isAdmin && (
+                                <Link to="/admin">
+                                    <button className="px-3 py-1.5 text-xs font-semibold text-purple-700 border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors">
+                                        관리자 페이지
+                                    </button>
+                                </Link>
+                            )}
+                            <button
+                                onClick={() => navigate('/change-password')}
+                                className="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                                비밀번호 변경
+                            </button>
+                            <button
+                                onClick={handleLogout}
+                                className="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                                로그아웃
+                            </button>
+                        </div>
+                    )}
+                </div>
             </header>
 
-            {loading ? (
-                <div style={styles.center}>투표 목록을 불러오는 중...</div>
-            ) : (
-                <>
-                    <Section title="투표 진행 중" icon="🗳️">
-                        {votableVotes.length === 0 ? (
-                            <Empty>현재 진행 중인 투표가 없습니다.</Empty>
-                        ) : votableVotes.map((vote) => {
-                            const hasVoted = localStorage.getItem(`voted_${vote.id}`) === 'true';
-                            return (
-                                <VoteCard key={vote.id}>
-                                    <div style={styles.cardRow}>
-                                        <span style={styles.voteName}>{vote.name}</span>
+            <main className="max-w-3xl mx-auto px-6 py-8">
+                {loading ? (
+                    <div className="text-center py-20 text-gray-400">투표 목록을 불러오는 중...</div>
+                ) : (
+                    <div className="space-y-8">
+                        {/* 투표 진행 중 */}
+                        <Section title="투표 진행 중" icon="🗳️" count={votableVotes.length} accentColor="purple">
+                            {votableVotes.length === 0 ? (
+                                <Empty>현재 진행 중인 투표가 없습니다.</Empty>
+                            ) : votableVotes.map((vote) => {
+                                const hasVoted = localStorage.getItem(`voted_${vote.id}`) === 'true';
+                                return (
+                                    <div key={vote.id} className="bg-white border border-gray-200 border-l-4 border-l-purple-400 rounded-xl px-5 py-4 shadow-sm flex justify-between items-center">
+                                        <div>
+                                            <p className="font-bold text-gray-900">{vote.name}</p>
+                                            <p className="text-xs text-gray-400 mt-1">마감: {new Date(vote.votingEndTime).toLocaleString()}</p>
+                                        </div>
                                         {hasVoted ? (
-                                            <span style={styles.badgeGreen}>투표 완료</span>
+                                            <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full">투표 완료</span>
                                         ) : (
                                             <button
-                                                style={styles.btnPrimary}
+                                                className="px-4 py-2 bg-purple-700 text-white text-sm font-semibold rounded-lg hover:bg-purple-800 transition-colors"
                                                 onClick={() => navigate(`/vote/${vote.id}`, { state: { vote } })}
                                             >
                                                 투표하기
                                             </button>
                                         )}
                                     </div>
-                                    <p style={styles.meta}>마감: {new Date(vote.votingEndTime).toLocaleString()}</p>
-                                </VoteCard>
-                            );
-                        })}
-                    </Section>
+                                );
+                            })}
+                        </Section>
 
-                    <Section title="유권자 등록 가능" icon="📋">
-                        {registerableVotes.length === 0 ? (
-                            <Empty>등록 가능한 투표가 없습니다.</Empty>
-                        ) : registerableVotes.map((vote) => (
-                            <VoteCard key={vote.id}>
-                                <div style={styles.cardRow}>
-                                    <span style={styles.voteName}>{vote.name}</span>
+                        {/* 유권자 등록 가능 */}
+                        <Section title="유권자 등록 가능" icon="📋" count={registerableVotes.length} accentColor="blue">
+                            {registerableVotes.length === 0 ? (
+                                <Empty>등록 가능한 투표가 없습니다.</Empty>
+                            ) : registerableVotes.map((vote) => (
+                                <div key={vote.id} className="bg-white border border-gray-200 border-l-4 border-l-blue-400 rounded-xl px-5 py-4 shadow-sm flex justify-between items-center">
+                                    <div>
+                                        <p className="font-bold text-gray-900">{vote.name}</p>
+                                        <p className="text-xs text-gray-400 mt-1">등록 마감: {new Date(vote.registrationEndTime).toLocaleString()}</p>
+                                    </div>
                                     <button
-                                        style={registeringId === vote.id ? styles.btnDisabled : styles.btnInfo}
+                                        className={`px-4 py-2 text-white text-sm font-semibold rounded-lg transition-colors ${registeringId === vote.id ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'}`}
                                         onClick={() => handleRegister(vote.id, vote.name)}
                                         disabled={registeringId === vote.id}
                                     >
                                         {registeringId === vote.id ? '등록 중...' : '등록하기'}
                                     </button>
                                 </div>
-                                <p style={styles.meta}>등록 마감: {new Date(vote.registrationEndTime).toLocaleString()}</p>
-                            </VoteCard>
-                        ))}
-                    </Section>
+                            ))}
+                        </Section>
 
-                    <Section title="참여했던 투표" icon="✅">
-                        {completedVotes.length === 0 ? (
-                            <Empty>참여했던 투표가 없습니다.</Empty>
-                        ) : completedVotes.map((vote) => (
-                            <VoteCard key={vote.id}>
-                                <div style={styles.cardRow}>
-                                    <span style={styles.voteName}>{vote.name}</span>
-                                    <div style={styles.row}>
+                        {/* 참여했던 투표 */}
+                        <Section title="참여했던 투표" icon="✅" count={completedVotes.length} accentColor="gray">
+                            {completedVotes.length === 0 ? (
+                                <Empty>참여했던 투표가 없습니다.</Empty>
+                            ) : completedVotes.map((vote) => (
+                                <div key={vote.id} className="bg-white border border-gray-200 border-l-4 border-l-gray-300 rounded-xl px-5 py-4 shadow-sm flex justify-between items-center">
+                                    <p className="font-bold text-gray-900">{vote.name}</p>
+                                    <div className="flex items-center gap-2">
                                         {vote.contractAddress && (
                                             <a
                                                 href={`https://sepolia.etherscan.io/address/${vote.contractAddress}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
+                                                className="px-3 py-1.5 bg-gray-600 text-white text-xs font-semibold rounded-lg hover:bg-gray-700 transition-colors"
                                             >
-                                                <button style={styles.btnSecondary}>컨트랙트 보기</button>
+                                                컨트랙트 보기
                                             </a>
                                         )}
-                                        <span style={styles.badgeGray}>종료됨</span>
+                                        <span className="px-3 py-1.5 bg-gray-100 text-gray-500 text-xs rounded-full">종료됨</span>
                                     </div>
                                 </div>
-                            </VoteCard>
-                        ))}
-                    </Section>
-                </>
-            )}
+                            ))}
+                        </Section>
+                    </div>
+                )}
+            </main>
         </div>
     );
 }
 
-function Section({ title, icon, children }) {
+function Section({ title, icon, count, accentColor, children }) {
     return (
-        <section style={styles.section}>
-            <h2 style={styles.sectionTitle}>{icon} {title}</h2>
-            {children}
+        <section>
+            <div className="flex items-center gap-2 mb-3">
+                <h2 className="text-base font-bold text-gray-700">{icon} {title}</h2>
+                <span className="px-2.5 py-0.5 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full">{count}</span>
+            </div>
+            <div className="space-y-3">{children}</div>
         </section>
     );
 }
 
-function VoteCard({ children }) {
-    return <div style={styles.card}>{children}</div>;
-}
-
 function Empty({ children }) {
-    return <p style={styles.empty}>{children}</p>;
+    return (
+        <div className="border border-dashed border-gray-200 rounded-xl p-6 text-center text-gray-400 text-sm">
+            {children}
+        </div>
+    );
 }
-
-const styles = {
-    page: { fontFamily: "'Segoe UI', sans-serif", padding: '24px', maxWidth: '800px', margin: 'auto', color: '#1a1a2e' },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', paddingBottom: '16px', borderBottom: '2px solid #e0e0e0' },
-    title: { fontSize: '1.8rem', fontWeight: '800', color: '#0f3460', letterSpacing: '2px', margin: 0 },
-    headerRight: { display: 'flex', alignItems: 'center', gap: '10px' },
-    email: { fontSize: '0.9rem', color: '#666' },
-    section: { marginBottom: '32px' },
-    sectionTitle: { fontSize: '1.1rem', fontWeight: '700', color: '#444', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' },
-    card: { background: 'white', border: '1px solid #e8e8e8', borderRadius: '10px', padding: '16px 20px', marginBottom: '10px', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' },
-    cardRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-    row: { display: 'flex', gap: '8px', alignItems: 'center' },
-    voteName: { fontWeight: '600', fontSize: '1rem' },
-    meta: { margin: '8px 0 0', color: '#888', fontSize: '0.85rem' },
-    empty: { color: '#aaa', fontStyle: 'italic', padding: '8px 0' },
-    center: { textAlign: 'center', padding: '60px', color: '#888' },
-    btnPrimary: { padding: '8px 18px', background: '#0f3460', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600' },
-    btnInfo: { padding: '8px 18px', background: '#2196f3', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600' },
-    btnSecondary: { padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' },
-    btnOutline: { padding: '8px 16px', background: 'white', color: '#0f3460', border: '1.5px solid #0f3460', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600' },
-    btnDisabled: { padding: '8px 18px', background: '#ccc', color: 'white', border: 'none', borderRadius: '6px', cursor: 'not-allowed', fontSize: '0.9rem' },
-    badgeGreen: { padding: '5px 12px', background: '#e8f5e9', color: '#2e7d32', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '600' },
-    badgeGray: { padding: '5px 12px', background: '#f5f5f5', color: '#666', borderRadius: '20px', fontSize: '0.85rem' },
-};
 
 export default VoterMainPage;
