@@ -10,18 +10,13 @@ public interface ElectionRepository extends JpaRepository<Election, String> {
 
     List<Election> findByStatus(ElectionStatus status);
 
-    // 등록 대기 중인 선거: 사전 등록됐지만 자기 등록 미완료
-    @Query("SELECT e FROM Election e WHERE e.status = 'REGISTRATION' " +
+    @Query("SELECT e FROM Election e WHERE e.status = :status " +
            "AND EXISTS (SELECT v FROM Voter v WHERE v.election = e AND v.email = :email AND v.user IS NULL)")
-    List<Election> findRegisterableByEmail(@Param("email") String email);
+    List<Election> findRegisterableByEmail(@Param("email") String email,
+                                           @Param("status") ElectionStatus status);
 
-    // 투표 진행 중인 선거: 자기 등록 완료된 사용자
-    @Query("SELECT e FROM Election e WHERE e.status = 'VOTING' " +
+    @Query("SELECT e FROM Election e WHERE e.status = :status " +
            "AND EXISTS (SELECT v FROM Voter v WHERE v.election = e AND v.user.id = :userId)")
-    List<Election> findVotingByUserId(@Param("userId") Long userId);
-
-    // 완료된 선거: 등록했던 사용자
-    @Query("SELECT e FROM Election e WHERE e.status = 'COMPLETED' " +
-           "AND EXISTS (SELECT v FROM Voter v WHERE v.election = e AND v.user.id = :userId)")
-    List<Election> findCompletedByUserId(@Param("userId") Long userId);
+    List<Election> findByStatusAndUserId(@Param("status") ElectionStatus status,
+                                         @Param("userId") Long userId);
 }

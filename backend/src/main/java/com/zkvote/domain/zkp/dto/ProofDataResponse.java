@@ -9,5 +9,6 @@ public record ProofDataResponse(
         String root,
         List<String> pathElements,
         List<Integer> pathIndices,
-        String submissionTicket
+        String submissionTicket,
+        int circuitNumCandidates  // compiled circuit size — frontend pads vote array to this length
 ) {}

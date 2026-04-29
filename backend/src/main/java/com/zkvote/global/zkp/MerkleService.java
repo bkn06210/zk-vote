@@ -1,6 +1,8 @@
 package com.zkvote.global.zkp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,21 +15,15 @@ import java.util.Map;
 @Service
 public class MerkleService {
 
+    private static final Logger log = LoggerFactory.getLogger(MerkleService.class);
+
     @Value("${merkle.script.path:scripts/compute_merkle_root.js}")
     private String scriptPath;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    /**
-     * Computes the Poseidon Merkle root for the given voter secrets.
-     * Delegates to a Node.js script (compute_merkle_root.js) that uses circomlibjs,
-     * ensuring exact compatibility with the Circom circuit's Poseidon parameters.
-     *
-     * @param secrets voter userSecret values (BigInteger strings)
-     * @param depth   Merkle tree depth defined on the Election
-     * @return Merkle root as a decimal string
-     */
     public String computeRoot(List<String> secrets, int depth) {
+        long start = System.currentTimeMillis();
         try {
             String input = objectMapper.writeValueAsString(Map.of("secrets", secrets, "depth", depth));
 
@@ -46,6 +42,9 @@ public class MerkleService {
             if (exitCode != 0) {
                 throw new RuntimeException("Merkle root computation failed: " + stderr.trim());
             }
+
+            log.info("[Merkle] root 계산 완료 — 유권자 {}명, depth {}, 소요 {}ms",
+                    secrets.size(), depth, System.currentTimeMillis() - start);
 
             return stdout.trim();
         } catch (IOException | InterruptedException e) {

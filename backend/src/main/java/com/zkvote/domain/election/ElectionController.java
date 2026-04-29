@@ -1,5 +1,6 @@
 package com.zkvote.domain.election;
 
+import com.zkvote.domain.election.dto.CircuitOptionResponse;
 import com.zkvote.domain.election.dto.CreateElectionRequest;
 import com.zkvote.domain.election.dto.ElectionResponse;
 import com.zkvote.domain.election.dto.StartVotingRequest;
@@ -19,6 +20,12 @@ import java.util.List;
 public class ElectionController {
 
     private final ElectionService electionService;
+
+    @GetMapping("/circuit-options")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<CircuitOptionResponse>> getCircuitOptions() {
+        return ResponseEntity.ok(electionService.getCircuitOptions());
+    }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")

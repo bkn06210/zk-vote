@@ -44,6 +44,8 @@ CREATE TABLE vote_records (
     election_id    CHAR(36)     NOT NULL,
     vote_index     INT          NOT NULL,
     nullifier_hash VARCHAR(255) NOT NULL,
+    vote_receipt   CHAR(66)     DEFAULT NULL,  -- 0x + 64 hex chars (SHA-256)
+    tx_hash        CHAR(66)     DEFAULT NULL,  -- Ethereum tx hash
     submitted_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_nullifier (nullifier_hash),
     CONSTRAINT fk_vote_record_election FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE

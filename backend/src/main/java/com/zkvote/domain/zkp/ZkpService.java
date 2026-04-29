@@ -7,6 +7,8 @@ import com.zkvote.domain.voter.Voter;
 import com.zkvote.domain.voter.VoterRepository;
 import com.zkvote.domain.zkp.dto.ProofDataResponse;
 import com.zkvote.domain.zkp.dto.SubmitProofRequest;
+import com.zkvote.domain.zkp.dto.SubmitProofResponse;
+import com.zkvote.global.blockchain.BlockchainService;
 import com.zkvote.global.zkp.MerkleProofService;
 import com.zkvote.global.zkp.ZkpVerifyService;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +16,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -27,9 +33,35 @@ public class ZkpService {
     private final VoteRecordRepository voteRecordRepository;
     private final MerkleProofService merkleProofService;
     private final ZkpVerifyService zkpVerifyService;
+    private final BlockchainService blockchainService;
 
     @Value("${zkp.files.path:../server/zkp}")
     private String zkpFilesPath;
+
+    private static final Pattern BUILD_DIR_PATTERN = Pattern.compile("^build_(\\d+)_(\\d+)$");
+
+    /**
+     * 주어진 depth에 대해 numCandidates를 충족하는 최소 회로를 찾아 회로의 numCandidates를 반환.
+     * (예: election.numCandidates=3, depth=4 → build_4_5 회로 사용 → 5 반환)
+     */
+    private int resolveCircuitNumCandidates(int depth, int numCandidates) {
+        File zkpDir = new File(zkpFilesPath);
+        File[] dirs = zkpDir.listFiles(f -> f.isDirectory() && BUILD_DIR_PATTERN.matcher(f.getName()).matches());
+        if (dirs == null) {
+            throw new IllegalStateException("ZKP 디렉토리를 찾을 수 없습니다.");
+        }
+        return Arrays.stream(dirs)
+                .map(d -> {
+                    Matcher m = BUILD_DIR_PATTERN.matcher(d.getName());
+                    m.matches();
+                    return new int[]{Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2))};
+                })
+                .filter(pair -> pair[0] == depth && pair[1] >= numCandidates)
+                .mapToInt(pair -> pair[1])
+                .min()
+                .orElseThrow(() -> new IllegalStateException(
+                        String.format("depth=%d에서 후보 %d명을 지원하는 ZK 회로가 없습니다.", depth, numCandidates)));
+    }
 
     @Transactional
     public ProofDataResponse getProofData(String electionId, Long userId) {
@@ -71,17 +103,21 @@ public class ZkpService {
                         .build()
         );
 
+        int circuitNumCandidates = resolveCircuitNumCandidates(
+                election.getMerkleTreeDepth(), election.getNumCandidates());
+
         return new ProofDataResponse(
                 voter.getUserSecret(),
                 proofResult.root(),
                 proofResult.pathElements(),
                 proofResult.pathIndices(),
-                ticket.getToken()
+                ticket.getToken(),
+                circuitNumCandidates
         );
     }
 
     @Transactional
-    public void submitProof(String electionId, SubmitProofRequest request) {
+    public SubmitProofResponse submitProof(String electionId, SubmitProofRequest request) {
         SubmissionTicket ticket = ticketRepository.findById(request.submissionTicket())
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 제출 티켓입니다."));
         if (!ticket.getElectionId().equals(electionId)) {
@@ -103,8 +139,10 @@ public class ZkpService {
             throw new IllegalStateException("이미 투표하셨습니다.");
         }
 
+        int circuitNumCandidates = resolveCircuitNumCandidates(
+                election.getMerkleTreeDepth(), election.getNumCandidates());
         String vkeyPath = zkpFilesPath + "/build_" + election.getMerkleTreeDepth()
-                + "_" + election.getNumCandidates() + "/verification_key.json";
+                + "_" + circuitNumCandidates + "/verification_key.json";
 
         boolean valid = zkpVerifyService.verify(request.proof(), publicSignals, vkeyPath);
         if (!valid) {
@@ -112,11 +150,26 @@ public class ZkpService {
         }
 
         int voteIndex = Integer.parseInt(publicSignals.get(1));
+        if (voteIndex < 0 || voteIndex >= election.getNumCandidates()) {
+            throw new IllegalArgumentException("유효하지 않은 투표 인덱스입니다.");
+        }
+
+        String txHash = blockchainService.recordVote(
+                election.getContractAddress(),
+                nullifierHash,
+                voteIndex,
+                request.voteReceipt()
+        );
+
         voteRecordRepository.save(VoteRecord.builder()
                 .electionId(electionId)
                 .voteIndex(voteIndex)
                 .nullifierHash(nullifierHash)
+                .voteReceipt(request.voteReceipt())
+                .txHash(txHash)
                 .build());
+
+        return new SubmitProofResponse(txHash);
     }
 
     private Election findVotingElection(String electionId) {

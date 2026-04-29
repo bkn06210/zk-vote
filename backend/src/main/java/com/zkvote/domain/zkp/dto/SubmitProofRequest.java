@@ -7,5 +7,6 @@ import java.util.List;
 public record SubmitProofRequest(
         JsonNode proof,
         List<String> publicSignals,
-        String submissionTicket
+        String submissionTicket,
+        String voteReceipt  // SHA-256(nullifierHash:nonce:candidateIndex), computed in frontend
 ) {}
